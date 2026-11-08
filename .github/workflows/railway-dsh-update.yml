@@ -1,0 +1,50 @@
+# Keeps the Railway deployment (deploy/railway) on the newest published
+# @deepseek-ai/dsh release. When npm's `latest` tag differs from DSH_VERSION in
+# deploy/railway/Dockerfile, this job commits the new version to DEPLOY_BRANCH;
+# Railway deploys that branch on push. Each deploy issues a new login URL in the
+# Railway deploy logs. GitHub runs the schedule only from the default branch.
+name: Railway dsh update
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: railway-dsh-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'chanuka789/deepseek-harness'
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_BRANCH: ccr-5484eaf7-yl2fzw
+      DOCKERFILE: deploy/railway/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_BRANCH }}
+
+      - name: Bump DSH_VERSION to npm latest
+        run: |
+          set -eu
+          latest="$(npm view @deepseek-ai/dsh dist-tags.latest)"
+          if ! printf '%s' "$latest" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "Unexpected version from npm: $latest" >&2
+            exit 1
+          fi
+          current="$(sed -n 's/^ARG DSH_VERSION=//p' "$DOCKERFILE")"
+          echo "current=$current latest=$latest"
+          if [ "$current" = "$latest" ]; then
+            echo "Already on $latest"
+            exit 0
+          fi
+          sed -i "s/^ARG DSH_VERSION=.*/ARG DSH_VERSION=${latest}/" "$DOCKERFILE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update Railway dsh to ${latest}"
+          git push origin "HEAD:${DEPLOY_BRANCH}"
