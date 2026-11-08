@@ -17,6 +17,10 @@ This directory builds a Railway image that runs the published `@deepseek-ai/dsh`
 | Variable `RAILWAY_DOCKERFILE_PATH` | `deploy/railway/Dockerfile` |
 | Variable `DEEPSEEK_API_KEY` | your DeepSeek API key |
 | Variables `DSH_USERNAME`, `DSH_PASSWORD` | optional username/password sign-in |
+| Variable `DSH_GITHUB_TOKEN` | optional GitHub token; `start.sh` signs in the GitHub CLI and configures Git to use it |
+| Variables `GIT_USER_NAME`, `GIT_USER_EMAIL` | optional author identity for the agent's Git commits |
+
+The image also installs pnpm, which the dsh plugin manager runs to install plugins into `$DSH_HOME/profiles/web`, and the GitHub CLI (`gh`). The agent's shell does not inherit credential variables, so the GitHub token is stored in the `gh` and Git configuration under `$HOME`, which is rebuilt on every start.
 | Volume | mounted at `/data` |
 | Public networking | a generated Railway domain |
 

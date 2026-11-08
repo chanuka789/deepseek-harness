@@ -16,6 +16,20 @@ fi
 mkdir -p "$DSH_HOME" "$DSH_WORKSPACE"
 cd "$DSH_WORKSPACE"
 
+# The agent's shell does not inherit credential variables, so GitHub access is
+# stored in the GitHub CLI and Git configuration under $HOME instead.
+if [ -n "${GIT_USER_NAME:-}" ]; then git config --global user.name "$GIT_USER_NAME"; fi
+if [ -n "${GIT_USER_EMAIL:-}" ]; then git config --global user.email "$GIT_USER_EMAIL"; fi
+if [ -n "${DSH_GITHUB_TOKEN:-}" ]; then
+  if printf '%s\n' "$DSH_GITHUB_TOKEN" | gh auth login --hostname github.com --git-protocol https --with-token \
+    && gh auth setup-git --hostname github.com; then
+    echo "dsh-railway-start: GitHub signed in as $(gh api user --jq .login 2>/dev/null || echo unknown)"
+  else
+    echo "dsh-railway-start: GitHub sign-in with DSH_GITHUB_TOKEN failed; check the token" >&2
+  fi
+fi
+unset DSH_GITHUB_TOKEN
+
 run_dir="$(mktemp -d)"
 dsh_log="$run_dir/dsh.log"
 : > "$dsh_log"
