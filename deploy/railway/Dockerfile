@@ -10,7 +10,7 @@ ARG DSH_VERSION=0.2.2-rc.1
 RUN npm install -g "@deepseek-ai/dsh@${DSH_VERSION}" && npm cache clean --force
 
 COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
-COPY deploy/railway/Caddyfile /etc/caddy/Caddyfile
+COPY deploy/railway/Caddyfile deploy/railway/Caddyfile.password deploy/railway/sign-in.html /etc/caddy/
 COPY deploy/railway/start.sh /usr/local/bin/dsh-railway-start
 RUN chmod +x /usr/local/bin/dsh-railway-start
 

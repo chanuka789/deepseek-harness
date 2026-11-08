@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Signing in</title>
+<style>
+body { font-family: system-ui, sans-serif; background: #111; color: #eee; margin: 0; padding: 24px 16px; }
+a { color: #8ab4f8; }
+</style>
+</head>
+<body>
+<p id="status">Signing in…</p>
+<p><a id="continue" href="/?token=__DSH_TOKEN__">Continue</a></p>
+<script>
+(function () {
+  var now = Date.now();
+  var last = 0;
+  try { last = Number(sessionStorage.getItem('dshSignIn')) || 0; } catch (error) { /* storage unavailable: retry once per load */ }
+  if (now - last > 15000) {
+    try { sessionStorage.setItem('dshSignIn', String(now)); } catch (error) { /* storage unavailable: no loop guard */ }
+    location.replace('/?token=__DSH_TOKEN__');
+  } else {
+    document.getElementById('status').textContent = 'Sign-in did not finish. Tap Continue, or clear this site\'s cookies and try again.';
+  }
+})();
+</script>
+</body>
+</html>
